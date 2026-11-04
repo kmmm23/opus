@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>열린소통 신문고 - 익명 민원 포털</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- ========================================================
+       1. 사이트 헤더 (DC풍 볼드 브랜드 로고 + 상단 큼직한 통합검색창)
+       ======================================================== -->
+  <header class="site-header">
+    <div class="header-top-row">
+      <!-- 볼드 브랜드 로고 -->
+      <a href="#/list" class="dc-brand-logo">
+        <span class="brand-symbol">소통<span class="highlight">인사이드</span></span>
+        <span class="brand-sub-badge">열린신문고</span>
+      </a>
+
+      <!-- DC풍 상단 통합 검색창 -->
+      <div class="top-search-container">
+        <form id="top-search-form" class="top-search-form">
+          <input type="search" id="top-search-input" class="top-search-input" placeholder="민원 & 통합검색어 입력">
+          <button type="submit" class="top-search-btn" title="검색">🔍</button>
+        </form>
+      </div>
+
+      <!-- 상단 액션 버튼 -->
+      <div class="top-user-actions">
+        <span id="top-admin-badge" class="admin-login-pill admin-active-pill" style="display: none;">
+          🛡️ 관리자 활성
+        </span>
+        <a href="#/admin/login" id="btn-admin-link" class="admin-login-pill">
+          <span>🔐</span> 관리자 로그인
+        </a>
+        <button id="btn-admin-logout" class="admin-login-pill" style="display: none; cursor: pointer;">
+          로그아웃
+        </button>
+        <a href="#/new" class="btn-top-write">
+          ✏️ 민원 작성
+        </a>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         2. DC 스타일 네이비 GNB 네비게이션 바 + 등록 카운터
+         ======================================================== -->
+    <nav class="dc-gnb-bar">
+      <div class="dc-gnb-inner">
+        <div class="dc-gnb-nav">
+          <a href="#/list" class="dc-gnb-item active" id="gnb-all">전체민원</a>
+          <a href="#/list?cat=시설/환경" class="dc-gnb-item" id="gnb-facility">시설/환경</a>
+          <a href="#/list?cat=서비스" class="dc-gnb-item" id="gnb-service">서비스불만</a>
+          <a href="#/list?cat=건의사항" class="dc-gnb-item" id="gnb-proposal">건의사항</a>
+          <a href="#/list?cat=기타" class="dc-gnb-item" id="gnb-etc">기타/상담</a>
+        </div>
+        <div class="dc-gnb-stats">
+          <span>오늘 <strong id="gnb-today-count">0</strong>개 민원 접수</span>
+          <span style="opacity: 0.5;">|</span>
+          <span>누적 <strong id="gnb-total-count">0</strong>건</span>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 서브 퀵 툴바 -->
+    <div class="dc-sub-toolbar">
+      <div class="dc-sub-inner">
+        <div class="category-quick-pills">
+          <span style="font-weight: 700; color: #475569; margin-right: 0.25rem;">주요 바로가기:</span>
+          <button class="cat-pill" onclick="applyQuickFilter('all')">전체보기</button>
+          <button class="cat-pill" onclick="applyQuickFilter('anon')">익명글 모음</button>
+          <button class="cat-pill" onclick="applyQuickFilter('secret')">비밀글 보관</button>
+          <button class="cat-pill" onclick="applyQuickFilter('resolved')">답변완료</button>
+        </div>
+        <div id="header-date-display" style="color: #64748b; font-size: 0.82rem;"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================
+       3. 메인 콘텐츠 컨테이너 (정식 페이지 뷰 전환 방식)
+       ======================================================== -->
+  <main class="main-wrapper">
+
+    <!-- ====================================================
+         [페이지 1] 민원 목록 뷰 (#/ or #/list)
+         ==================================================== -->
+    <section id="view-list" class="page-view">
+      <!-- 공공기관 신문고 개요 배너 -->
+      <div class="gov-intro-card">
+        <div class="intro-text-area">
+          <h2>🏛️ 시민 안심 열린 익명 신문고</h2>
+          <p>
+            본 게시판은 이용자의 개인 신원과 IP를 일체 기록·노출하지 않으며,
+            비밀번호(SHA-256)를 통한 자율 수정·삭제 및 비공개(비밀글) 보호를 보장합니다.
+          </p>
+        </div>
+        <a href="#/new" class="btn-primary-action" style="white-space: nowrap;">
+          ✏️ 새 민원 등록
+        </a>
+      </div>
+
+      <!-- 검색 & 필터 조작 패널 -->
+      <div class="filter-control-panel">
+        <div class="filter-left-group">
+          <select id="filter-category" class="board-select" aria-label="분야 선택">
+            <option value="all">전체 분야</option>
+            <option value="시설/환경">시설/환경</option>
+            <option value="서비스">서비스 불만</option>
+            <option value="건의사항">건의사항</option>
+            <option value="기타">기타</option>
+          </select>
+
+          <select id="filter-status" class="board-select" aria-label="처리상태 선택">
+            <option value="all">전체 처리상태</option>
+            <option value="pending">접수 대기</option>
+            <option value="processing">처리 중</option>
+            <option value="resolved">답변 완료</option>
+          </select>
+
+          <!-- 사용자 요청: "익명글만" -> "익명글", "비공개글만" -> "비밀글" 로 변경 -->
+          <label id="label-filter-anon" class="filter-checkbox-item">
+            <input type="checkbox" id="filter-anon-only">
+            <span>익명글</span>
+          </label>
+
+          <label id="label-filter-secret" class="filter-checkbox-item">
+            <input type="checkbox" id="filter-secret-only">
+            <span>비밀글</span>
+          </label>
+        </div>
+
+        <div style="display: flex; gap: 0.4rem;">
+          <input type="search" id="board-search-input" class="board-input" placeholder="제목/내용 검색" style="min-width: 200px;">
+          <button id="btn-board-search" class="btn-secondary-action" style="padding: 0.45rem 0.85rem;">검색</button>
+        </div>
+      </div>
+
+      <!-- 공공기관 + 커뮤니티 테이블 -->
+      <div class="board-table-container">
+        <table class="board-table">
+          <thead>
+            <tr>
+              <th style="width: 70px;">번호</th>
+              <th style="width: 105px;">분야</th>
+              <th>제목</th>
+              <th style="width: 110px;">글쓴이</th>
+              <th style="width: 100px;">날짜</th>
+              <th style="width: 100px;">상태</th>
+            </tr>
+          </thead>
+          <tbody id="board-tbody">
+            <!-- JavaScript 렌더링 -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 테이블 하단 바 -->
+      <div class="table-footer-bar">
+        <div style="font-size: 0.88rem; color: #6b7280;">
+          총 <strong id="list-count-text" style="color: #0266b3;">0</strong>건의 민원이 등록되어 있습니다.
+        </div>
+        <a href="#/new" class="btn-primary-action">
+          ✏️ 글쓰기
+        </a>
+      </div>
+    </section>
+
+    <!-- ====================================================
+         [페이지 2] 새 민원 작성 뷰 (#/new) - 팝업 없이 내부 전체 화면
+         ==================================================== -->
+    <section id="view-new" class="page-view">
+      <div class="form-page-container">
+        <div class="form-page-header">
+          <h2 class="form-page-title">
+            <span>✍️</span> 민원 및 건의사항 등록
+          </h2>
+          <span style="font-size: 0.85rem; color: #dc2626;">* 필수 입력 사항</span>
+        </div>
+
+        <div class="form-notice-box">
+          <strong>익명 보호 안내:</strong> [익명으로 작성하기] 선택 시 작성자 이름이 '익명'으로 처리되며 신원 정보는 절대 저장되지 않습니다. 
+          입력하신 4자리 비밀번호는 단방향 암호화(SHA-256)되어 수정, 삭제 및 비밀글 확인 시에만 사용됩니다.
+        </div>
+
+        <form id="form-create-post">
+          <table class="standard-form-table">
+            <tbody>
+              <tr>
+                <th>분야 선택<span class="req-star">*</span></th>
+                <td>
+                  <select id="create-category" class="board-select" style="min-width: 180px;" required>
+                    <option value="시설/환경">시설/환경</option>
+                    <option value="서비스">서비스 불만</option>
+                    <option value="건의사항">건의사항</option>
+                    <option value="기타">기타</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <th>익명 / 비밀 설정<span class="req-star">*</span></th>
+                <td>
+                  <div class="checkbox-toggle-card">
+                    <label class="check-row">
+                      <input type="checkbox" id="create-is-anonymous" checked>
+                      <div>
+                        <span class="check-title">익명으로 작성하기</span>
+                        <span class="check-desc">(작성자 이름이 '익명'으로 표기됩니다)</span>
+                      </div>
+                    </label>
+
+                    <label class="check-row">
+                      <input type="checkbox" id="create-is-secret">
+                      <div>
+                        <span class="check-title">비밀글(비공개)로 설정하기</span>
+                        <span class="check-desc">(작성자 본인과 관리자만 내용을 볼 수 있습니다)</span>
+                      </div>
+                    </label>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <th>작성자 이름<span class="req-star">*</span></th>
+                <td>
+                  <input type="text" id="create-author" class="board-input" value="익명" disabled style="max-width: 240px;" required>
+                  <span id="author-hint-text" style="font-size: 0.82rem; color: #6b7280; margin-left: 0.5rem;">
+                    익명 설정 시 '익명'으로 자동 지정됩니다.
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <th>비밀번호<span class="req-star">*</span></th>
+                <td>
+                  <input type="password" id="create-password" class="board-input" placeholder="비밀번호 4자리 이상 입력" minlength="4" style="max-width: 240px;" required>
+                  <span style="font-size: 0.82rem; color: #6b7280; margin-left: 0.5rem;">
+                    ※ 글 수정, 삭제 및 비밀글 열람에 사용됩니다.
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <th>제목<span class="req-star">*</span></th>
+                <td>
+                  <input type="text" id="create-title" class="board-input" placeholder="제목을 입력하세요 (최대 100자)" maxlength="100" style="width: 100%;" required>
+                </td>
+              </tr>
+              <tr>
+                <th>내용<span class="req-star">*</span></th>
+                <td>
+                  <textarea id="create-content" class="standard-textarea" placeholder="구체적인 민원 내용과 요구사항을 작성해 주세요." required></textarea>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="form-button-row">
+            <button type="button" class="btn-secondary-action" onclick="location.hash='#/list'">취소 (목록으로)</button>
+            <button type="submit" class="btn-primary-action" style="padding: 0.7rem 2rem;">민원 등록하기</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ====================================================
+         [페이지 3] 민원 상세 보기 뷰 (#/detail?id=...)
+         ==================================================== -->
+    <section id="view-detail" class="page-view">
+      <div class="form-page-container">
+        <div class="form-page-header">
+          <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+            <span id="detail-category-badge" class="tag-badge tag-cat"></span>
+            <span id="detail-anon-badge" class="tag-badge tag-anon" style="display: none;">익명</span>
+            <span id="detail-secret-badge" class="tag-badge tag-secret" style="display: none;">비밀글</span>
+            <span id="detail-status-badge"></span>
+          </div>
+          <button class="btn-secondary-action" onclick="location.hash='#/list'">목록으로</button>
+        </div>
+
+        <h2 id="detail-title" style="font-size: 1.35rem; font-weight: 800; color: #111827; margin-bottom: 1.25rem;"></h2>
+
+        <table class="detail-meta-table">
+          <tbody>
+            <tr>
+              <th>작성자</th>
+              <td id="detail-author"></td>
+              <th>작성일</th>
+              <td id="detail-created"></td>
+            </tr>
+            <tr id="detail-updated-row" style="display: none;">
+              <th>수정일</th>
+              <td id="detail-updated" colspan="3"></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- 비밀글 인라인 잠금 안내 (팝업 없이 페이지 내부에서 검증) -->
+        <div id="detail-locked-box" class="inline-lock-alert" style="display: none;">
+          <h3>🔒 비밀글(비공개)로 보호된 민원입니다</h3>
+          <p>작성자 본인 또는 관리자만 열람할 수 있습니다. 작성 시 설정한 비밀번호를 입력해 주세요.</p>
+          <div class="inline-password-group">
+            <input type="password" id="input-detail-password" class="board-input" placeholder="비밀번호 4자리" style="max-width: 180px;">
+            <button id="btn-detail-unlock" class="btn-primary-action">비밀글 열기</button>
+          </div>
+        </div>
+
+        <!-- 본문 내용 -->
+        <div id="detail-content-area" class="detail-content-box" style="display: none;"></div>
+
+        <!-- 관리자 공식 답변 영역 -->
+        <div id="detail-official-answer" class="admin-reply-container" style="display: none;">
+          <div class="admin-reply-head">
+            <div class="admin-reply-title">
+              <span>🏛️</span>
+              <span>담당 행정기관 공식 답변</span>
+            </div>
+            <span id="detail-answer-date" style="font-size: 0.82rem; color: #6b7280;"></span>
+          </div>
+          <div id="detail-answer-content" class="admin-reply-content"></div>
+        </div>
+
+        <!-- 관리자 전용 답변/상태 에디터 (관리자 로그인 시 표시) -->
+        <div id="detail-admin-editor" class="admin-edit-panel" style="display: none;">
+          <h4 style="font-size: 0.95rem; font-weight: 800; color: #1e3a8a; margin-bottom: 0.85rem;">
+            🛡️ [관리자 권한] 민원 답변 및 상태 관리
+          </h4>
+          <div style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap;">
+            <label for="admin-select-status" style="font-size: 0.88rem; font-weight: 700;">처리상태 변경:</label>
+            <select id="admin-select-status" class="board-select">
+              <option value="pending">접수 대기</option>
+              <option value="processing">처리 중</option>
+              <option value="resolved">답변 완료</option>
+            </select>
+          </div>
+          <div style="margin-bottom: 0.75rem;">
+            <label for="admin-input-reply" style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 0.35rem;">공식 답변 내용:</label>
+            <textarea id="admin-input-reply" class="standard-textarea" style="min-height: 100px;" placeholder="민원인에게 전달할 공식 답변을 작성하세요."></textarea>
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+            <button id="btn-admin-delete-reply" class="btn-secondary-action" style="color: #dc2626; display: none;">답변 삭제</button>
+            <button id="btn-admin-save-reply" class="btn-primary-action">답변 등록 및 상태 저장</button>
+          </div>
+        </div>
+
+        <!-- 하단 버튼 바 -->
+        <div class="form-button-row" style="justify-content: space-between; border-top: 1px solid #e5e7eb; padding-top: 1.25rem; margin-top: 1.5rem;">
+          <div style="display: flex; gap: 0.5rem;">
+            <button id="btn-detail-edit" class="btn-secondary-action">✏️ 수정</button>
+            <button id="btn-detail-delete" class="btn-secondary-action" style="color: #dc2626; border-color: #fca5a5;">🗑️ 삭제</button>
+          </div>
+          <button class="btn-primary-action" onclick="location.hash='#/list'">목록으로</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================
+         [페이지 4] 민원 수정 뷰 (#/edit?id=...)
+         ==================================================== -->
+    <section id="view-edit" class="page-view">
+      <div class="form-page-container">
+        <div class="form-page-header">
+          <h2 class="form-page-title">
+            <span>✏️</span> 민원 게시물 수정
+          </h2>
+          <span style="font-size: 0.85rem; color: #dc2626;">* 필수 입력 사항</span>
+        </div>
+
+        <form id="form-edit-post">
+          <input type="hidden" id="edit-id">
+
+          <table class="standard-form-table">
+            <tbody>
+              <tr>
+                <th>분야 선택<span class="req-star">*</span></th>
+                <td>
+                  <select id="edit-category" class="board-select" style="min-width: 180px;" required>
+                    <option value="시설/환경">시설/환경</option>
+                    <option value="서비스">서비스 불만</option>
+                    <option value="건의사항">건의사항</option>
+                    <option value="기타">기타</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <th>익명 / 비밀 설정<span class="req-star">*</span></th>
+                <td>
+                  <div class="checkbox-toggle-card">
+                    <label class="check-row">
+                      <input type="checkbox" id="edit-is-anonymous">
+                      <div>
+                        <span class="check-title">익명으로 변경하기</span>
+                        <span class="check-desc">(작성자 이름이 '익명'으로 표기됩니다)</span>
+                      </div>
+                    </label>
+
+                    <label class="check-row">
+                      <input type="checkbox" id="edit-is-secret">
+                      <div>
+                        <span class="check-title">비밀글(비공개)로 설정하기</span>
+                        <span class="check-desc">(작성자 본인과 관리자만 볼 수 있습니다)</span>
+                      </div>
+                    </label>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <th>작성자 이름<span class="req-star">*</span></th>
+                <td>
+                  <input type="text" id="edit-author" class="board-input" style="max-width: 240px;" required>
+                </td>
+              </tr>
+              <tr>
+                <th>새 비밀번호</th>
+                <td>
+                  <input type="password" id="edit-password" class="board-input" placeholder="비밀번호 변경 시에만 입력" minlength="4" style="max-width: 240px;">
+                  <span style="font-size: 0.82rem; color: #6b7280; margin-left: 0.5rem;">
+                    (비워두면 기존 비밀번호가 유지됩니다)
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <th>제목<span class="req-star">*</span></th>
+                <td>
+                  <input type="text" id="edit-title" class="board-input" style="width: 100%;" required maxlength="100">
+                </td>
+              </tr>
+              <tr>
+                <th>내용<span class="req-star">*</span></th>
+                <td>
+                  <textarea id="edit-content" class="standard-textarea" required></textarea>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="form-button-row">
+            <button type="button" class="btn-secondary-action" onclick="window.history.back()">수정 취소</button>
+            <button type="submit" class="btn-primary-action" style="padding: 0.7rem 2rem;">수정 내용 저장</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ====================================================
+         [페이지 5] 관리자 로그인 뷰 (#/admin/login)
+         - 사용자 요청: 아이디와 비밀번호 빈공란(빈칸)으로 설정!
+         ==================================================== -->
+    <section id="view-login" class="page-view">
+      <div class="login-card">
+        <div style="text-align: center; font-size: 2rem; margin-bottom: 0.35rem;">🔐</div>
+        <h2 class="login-card-title">행정 관리자 로그인</h2>
+        <p class="login-card-desc">열린소통 신문고 관리자 전용 인증 창구입니다.</p>
+
+        <form id="form-admin-login">
+          <div style="margin-bottom: 1.15rem;">
+            <label for="login-id" style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 0.35rem;">관리자 아이디</label>
+            <!-- 빈공란으로 초기화 -->
+            <input type="text" id="login-id" class="board-input" placeholder="관리자 아이디를 입력하세요" style="width: 100%;" required autocomplete="username">
+          </div>
+
+          <div style="margin-bottom: 1.25rem;">
+            <label for="login-pw" style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 0.35rem;">관리자 비밀번호</label>
+            <!-- 빈공란으로 초기화 -->
+            <input type="password" id="login-pw" class="board-input" placeholder="관리자 비밀번호를 입력하세요" style="width: 100%;" required autocomplete="current-password">
+            <div style="font-size: 0.8rem; color: #6b7280; margin-top: 0.35rem;">
+              ※ 데모 관리자 계정: <strong>admin</strong> / 비밀번호: <strong>admin1234</strong>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary-action" style="width: 100%; justify-content: center; padding: 0.75rem;">
+            관리자 인증 로그인
+          </button>
+
+          <div style="margin-top: 1.25rem; text-align: center;">
+            <a href="#/list" style="color: #6b7280; font-size: 0.85rem; text-decoration: underline;">
+              ← 일반 민원 목록으로 돌아가기
+            </a>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ====================================================
+         [페이지 6] 인라인 본인 인증 뷰 (#/verify?id=...&action=...)
+         ==================================================== -->
+    <section id="view-verify" class="page-view">
+      <div class="login-card">
+        <div style="text-align: center; font-size: 2rem; margin-bottom: 0.35rem;">🔑</div>
+        <h2 id="verify-page-title" class="login-card-title">본인 확인 비밀번호</h2>
+        <p id="verify-page-desc" class="login-card-desc">작성 시 설정한 4자리 비밀번호를 입력해 주세요.</p>
+
+        <form id="form-verify-password">
+          <div style="margin-bottom: 1.25rem;">
+            <input type="password" id="input-verify-pw" class="board-input" placeholder="비밀번호 4자리 입력" style="width: 100%; text-align: center; font-size: 1.15rem; letter-spacing: 2px;" required autofocus>
+          </div>
+
+          <button type="submit" class="btn-primary-action" style="width: 100%; justify-content: center; padding: 0.7rem;">
+            확인
+          </button>
+
+          <div style="margin-top: 1.25rem; text-align: center;">
+            <button type="button" id="btn-verify-cancel" style="background: none; border: none; color: #6b7280; font-size: 0.85rem; text-decoration: underline; cursor: pointer;">
+              취소하고 이전 화면으로
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 푸터 -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-copy">
+        <strong>열린소통 익명신문고</strong> | 개인정보보호법에 따라 작성자의 IP 및 신원을 절대 수집·공개하지 않습니다.<br>
+        Copyright &copy; 2026 Open Complaint Board System. All Rights Reserved.
+      </div>
+      <div>
+        <a href="#/list" style="color: #cbd5e1; margin-right: 1rem;">민원목록</a>
+        <a href="#/new" style="color: #cbd5e1; margin-right: 1rem;">민원신청</a>
+        <a href="#/admin/login" style="color: #cbd5e1;">관리자관</a>
+      </div>
+    </div>
+  </footer>
+
+  <div id="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
