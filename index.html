@@ -14,7 +14,7 @@
     <div class="header-top-row">
       <!-- 볼드 브랜드 로고 -->
       <a href="#/list" class="dc-brand-logo">
-        <span class="brand-symbol">소통<span class="highlight">인사이드</span></span>
+        <span class="brand-symbol">소통<span class="highlight">공간</span></span>
         <span class="brand-sub-badge">열린신문고</span>
       </a>
 
@@ -28,6 +28,7 @@
 
       <!-- 상단 액션 버튼 -->
       <div class="top-user-actions">
+        <!-- 관리자 로그인 영역 -->
         <span id="top-admin-badge" class="admin-login-pill admin-active-pill" style="display: none;">
           🛡️ 관리자 활성
         </span>
@@ -37,9 +38,18 @@
         <button id="btn-admin-logout" class="admin-login-pill" style="display: none; cursor: pointer;">
           로그아웃
         </button>
-        <a href="#/new" class="btn-top-write">
-          ✏️ 민원 작성
-        </a>
+
+        <!-- 회원 로그인 영역 -->
+        <div class="user-menu-wrapper">
+          <!-- 비로그인: 회원 로그인 링크 -->
+          <a href="#/user/login" id="btn-user-link" class="user-login-pill">
+            <span>👤</span> 회원 로그인
+          </a>
+          <!-- 로그인 후: 회원 아이디 표시 (클릭 시 고유 회원 메뉴 창으로 이동) -->
+          <a href="#/user/menu" id="btn-user-menu-toggle" class="user-login-pill user-active-pill" style="display: none; cursor: pointer; text-decoration: none;">
+            👤 <strong id="top-user-id">user</strong> 님
+          </a>
+        </div>
       </div>
     </div>
 
@@ -49,11 +59,14 @@
     <nav class="dc-gnb-bar">
       <div class="dc-gnb-inner">
         <div class="dc-gnb-nav">
-          <a href="#/list" class="dc-gnb-item active" id="gnb-all">전체민원</a>
-          <a href="#/list?cat=시설/환경" class="dc-gnb-item" id="gnb-facility">시설/환경</a>
-          <a href="#/list?cat=서비스" class="dc-gnb-item" id="gnb-service">서비스불만</a>
-          <a href="#/list?cat=건의사항" class="dc-gnb-item" id="gnb-proposal">건의사항</a>
-          <a href="#/list?cat=기타" class="dc-gnb-item" id="gnb-etc">기타/상담</a>
+          <button type="button" class="dc-gnb-item dc-gnb-btn active" id="gnb-toggle-all" aria-expanded="false" title="클릭 시 바로가기 메뉴가 펼쳐집니다">
+            <span>전체보기</span>
+            <span class="dropdown-arrow">▾</span>
+          </button>
+          <a href="#/list?cat=1. 시설/환경" class="dc-gnb-item" id="gnb-cat-1">시설/환경</a>
+          <a href="#/list?cat=2. 건의사항" class="dc-gnb-item" id="gnb-cat-2">건의사항</a>
+          <a href="#/list?cat=3. 서비스 불만" class="dc-gnb-item" id="gnb-cat-3">서비스 불만</a>
+          <a href="#/list?cat=4. 기타" class="dc-gnb-item" id="gnb-cat-4">기타</a>
         </div>
         <div class="dc-gnb-stats">
           <span>오늘 <strong id="gnb-today-count">0</strong>개 민원 접수</span>
@@ -63,17 +76,84 @@
       </div>
     </nav>
 
+    <!-- 전체 카테고리 바로가기 드롭다운 패널 -->
+    <div id="category-dropdown-panel" class="category-dropdown-panel" style="display: none;">
+      <div class="category-dropdown-inner">
+        <div class="category-dropdown-header">
+          <span class="cat-dropdown-title">📁 바로가기 & 카테고리 모아보기</span>
+          <span class="cat-dropdown-desc">원하시는 메뉴나 카테고리를 선택하시면 해당 민원 목록으로 바로 이동합니다.</span>
+        </div>
+        <div class="category-grid-menu">
+          <button type="button" class="cat-menu-card card-all" onclick="CategoryController.viewAll()">
+            <span class="cat-card-num">ALL</span>
+            <span class="cat-card-name">전체보기</span>
+            <span class="cat-card-sub">모든 등록 민원 모아보기</span>
+          </button>
+          <button type="button" class="cat-menu-card" onclick="CategoryController.selectCategory('1. 시설/환경')">
+            <span class="cat-card-num">01</span>
+            <span class="cat-card-name">1. 시설/환경</span>
+            <span class="cat-card-sub">학교 시설, 안전, 통학로 등</span>
+          </button>
+          <button type="button" class="cat-menu-card" onclick="CategoryController.selectCategory('2. 건의사항')">
+            <span class="cat-card-num">02</span>
+            <span class="cat-card-name">2. 건의사항</span>
+            <span class="cat-card-sub">제도 개선 및 정책 제안</span>
+          </button>
+          <button type="button" class="cat-menu-card" onclick="CategoryController.selectCategory('3. 서비스 불만')">
+            <span class="cat-card-num">03</span>
+            <span class="cat-card-name">3. 서비스 불만</span>
+            <span class="cat-card-sub">행정 서비스, 급식, 고충 상담</span>
+          </button>
+          <button type="button" class="cat-menu-card" onclick="CategoryController.selectCategory('4. 기타')">
+            <span class="cat-card-num">04</span>
+            <span class="cat-card-name">4. 기타</span>
+            <span class="cat-card-sub">일반 문의 및 기타 의견</span>
+          </button>
+          <button type="button" class="cat-menu-card card-anon" onclick="CategoryController.viewAnonymous()">
+            <span class="cat-card-num num-purple">ANON</span>
+            <span class="cat-card-name">익명글</span>
+            <span class="cat-card-sub">신원 보호 익명 민원만 조회</span>
+          </button>
+          <button type="button" class="cat-menu-card card-secret" onclick="CategoryController.viewSecret()">
+            <span class="cat-card-num num-red">SECRET</span>
+            <span class="cat-card-name">비밀글</span>
+            <span class="cat-card-sub">비밀번호 비공개 민원 모음</span>
+          </button>
+          <button type="button" class="cat-menu-card card-resolved" onclick="CategoryController.viewResolved()">
+            <span class="cat-card-num num-green">DONE</span>
+            <span class="cat-card-name">답변완료</span>
+            <span class="cat-card-sub">교육청/관리자 답변 완료건</span>
+          </button>
+        </div>
+        <div class="category-dropdown-footer">
+          <div class="cat-quick-tags">
+            <span style="font-weight: 700; color: #475569;">빠른 필터:</span>
+            <button type="button" class="cat-mini-tag" onclick="CategoryController.viewAll()">📋 전체</button>
+            <button type="button" class="cat-mini-tag" onclick="CategoryController.viewAnonymous()">🔒 익명글</button>
+            <button type="button" class="cat-mini-tag" onclick="CategoryController.viewSecret()">🤫 비밀글</button>
+            <button type="button" class="cat-mini-tag" onclick="CategoryController.viewResolved()">✅ 답변완료</button>
+          </div>
+          <button type="button" id="btn-close-dropdown" class="btn-close-cat-menu">닫기 ✕</button>
+        </div>
+      </div>
+    </div>
+
     <!-- 서브 퀵 툴바 -->
     <div class="dc-sub-toolbar">
       <div class="dc-sub-inner">
         <div class="category-quick-pills">
-          <span style="font-weight: 700; color: #475569; margin-right: 0.25rem;">주요 바로가기:</span>
-          <button class="cat-pill" onclick="applyQuickFilter('all')">전체보기</button>
-          <button class="cat-pill" onclick="applyQuickFilter('anon')">익명글 모음</button>
-          <button class="cat-pill" onclick="applyQuickFilter('secret')">비밀글 보관</button>
-          <button class="cat-pill" onclick="applyQuickFilter('resolved')">답변완료</button>
+          <span style="font-weight: 700; color: #475569; margin-right: 0.25rem;">카테고리 바로가기:</span>
+          <button class="cat-pill" onclick="CategoryController.viewAll()">전체보기</button>
+          <button class="cat-pill" onclick="CategoryController.viewAnonymous()">익명글 모음</button>
+          <button class="cat-pill" onclick="CategoryController.viewSecret()">비밀글 보관</button>
+          <button class="cat-pill" onclick="CategoryController.viewResolved()">답변완료</button>
         </div>
-        <div id="header-date-display" style="color: #64748b; font-size: 0.82rem;"></div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <a href="#/new" class="btn-sub-write" style="background-color: #0266b3; color: #ffffff; padding: 0.28rem 0.75rem; border-radius: 4px; font-size: 0.82rem; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem;">
+            ✏️ 민원 작성
+          </a>
+          <div id="header-date-display" style="color: #64748b; font-size: 0.82rem;"></div>
+        </div>
       </div>
     </div>
   </header>
@@ -104,12 +184,12 @@
       <!-- 검색 & 필터 조작 패널 -->
       <div class="filter-control-panel">
         <div class="filter-left-group">
-          <select id="filter-category" class="board-select" aria-label="분야 선택">
-            <option value="all">전체 분야</option>
-            <option value="시설/환경">시설/환경</option>
-            <option value="서비스">서비스 불만</option>
-            <option value="건의사항">건의사항</option>
-            <option value="기타">기타</option>
+          <select id="filter-category" class="board-select" aria-label="카테고리 선택">
+            <option value="all">전체 카테고리</option>
+            <option value="1. 시설/환경">1. 시설/환경</option>
+            <option value="2. 건의사항">2. 건의사항</option>
+            <option value="3. 서비스 불만">3. 서비스 불만</option>
+            <option value="4. 기타">4. 기타</option>
           </select>
 
           <select id="filter-status" class="board-select" aria-label="처리상태 선택">
@@ -143,7 +223,7 @@
           <thead>
             <tr>
               <th style="width: 70px;">번호</th>
-              <th style="width: 105px;">분야</th>
+              <th style="width: 120px;">카테고리</th>
               <th>제목</th>
               <th style="width: 110px;">글쓴이</th>
               <th style="width: 100px;">날짜</th>
@@ -179,36 +259,41 @@
           <span style="font-size: 0.85rem; color: #dc2626;">* 필수 입력 사항</span>
         </div>
 
-        <div class="form-notice-box">
-          <strong>익명 보호 안내:</strong> [익명으로 작성하기] 선택 시 작성자 이름이 '익명'으로 처리되며 신원 정보는 절대 저장되지 않습니다. 
-          입력하신 4자리 비밀번호는 단방향 암호화(SHA-256)되어 수정, 삭제 및 비밀글 확인 시에만 사용됩니다.
+        <div id="new-post-notice-box" class="form-notice-box">
+          <strong>익명 보호 안내:</strong> 회원 로그인 없이 작성할 경우 신원 보호를 위해 작성자 정보 없이 '익명'으로 고정 등록됩니다.
+          입력하신 4~8자리 비밀번호(영문/숫자)는 단방향 암호화(SHA-256)되어 수정, 삭제 및 비밀글 확인 시에 사용됩니다.
         </div>
 
         <form id="form-create-post">
           <table class="standard-form-table">
             <tbody>
               <tr>
-                <th>분야 선택<span class="req-star">*</span></th>
+                <th>카테고리 선택<span class="req-star">*</span></th>
                 <td>
                   <select id="create-category" class="board-select" style="min-width: 180px;" required>
-                    <option value="시설/환경">시설/환경</option>
-                    <option value="서비스">서비스 불만</option>
-                    <option value="건의사항">건의사항</option>
-                    <option value="기타">기타</option>
+                    <option value="1. 시설/환경">1. 시설/환경</option>
+                    <option value="2. 건의사항">2. 건의사항</option>
+                    <option value="3. 서비스 불만">3. 서비스 불만</option>
+                    <option value="4. 기타">4. 기타</option>
                   </select>
                 </td>
               </tr>
-              <tr>
+              <tr id="row-create-anon-toggle">
                 <th>익명 / 비밀 설정<span class="req-star">*</span></th>
                 <td>
                   <div class="checkbox-toggle-card">
-                    <label class="check-row">
+                    <label class="check-row" id="label-create-is-anonymous">
                       <input type="checkbox" id="create-is-anonymous" checked>
                       <div>
                         <span class="check-title">익명으로 작성하기</span>
                         <span class="check-desc">(작성자 이름이 '익명'으로 표기됩니다)</span>
                       </div>
                     </label>
+
+                    <!-- 비회원일 때 표시되는 익명 고정 안내 -->
+                    <div id="badge-nonmember-fixed-anon" style="display: none; background-color: #f1f5f9; border: 1px dashed #cbd5e1; border-radius: 4px; padding: 0.6rem 0.85rem; color: #334155; font-size: 0.85rem; line-height: 1.4;">
+                      🔒 <strong>비회원 익명 고정</strong>: 현재 비회원 상태이므로 작성자 정보 없이 '익명'으로 안전하게 등록됩니다.
+                    </div>
 
                     <label class="check-row">
                       <input type="checkbox" id="create-is-secret">
@@ -220,21 +305,21 @@
                   </div>
                 </td>
               </tr>
-              <tr>
+              <tr id="row-create-author">
                 <th>작성자 이름<span class="req-star">*</span></th>
                 <td>
-                  <input type="text" id="create-author" class="board-input" value="익명" disabled style="max-width: 240px;" required>
+                  <input type="text" id="create-author" class="board-input" value="익명" disabled style="max-width: 240px;">
                   <span id="author-hint-text" style="font-size: 0.82rem; color: #6b7280; margin-left: 0.5rem;">
                     익명 설정 시 '익명'으로 자동 지정됩니다.
                   </span>
                 </td>
               </tr>
-              <tr>
+              <tr id="row-create-password">
                 <th>비밀번호<span class="req-star">*</span></th>
                 <td>
-                  <input type="password" id="create-password" class="board-input" placeholder="비밀번호 4자리 이상 입력" minlength="4" style="max-width: 240px;" required>
+                  <input type="password" id="create-password" class="board-input" placeholder="영문/숫자 4~8자리 입력" minlength="4" maxlength="8" pattern="[a-zA-Z0-9]{4,8}" title="최소 4자리에서 최대 8자리의 영문 및 숫자만 입력 가능합니다." style="max-width: 240px;" required>
                   <span style="font-size: 0.82rem; color: #6b7280; margin-left: 0.5rem;">
-                    ※ 글 수정, 삭제 및 비밀글 열람에 사용됩니다.
+                    ※ 최소 4자리~최대 8자리 영문 및 숫자만 가능 (비밀글 열람 및 수정/삭제용)
                   </span>
                 </td>
               </tr>
@@ -298,7 +383,7 @@
           <h3>🔒 비밀글(비공개)로 보호된 민원입니다</h3>
           <p>작성자 본인 또는 관리자만 열람할 수 있습니다. 작성 시 설정한 비밀번호를 입력해 주세요.</p>
           <div class="inline-password-group">
-            <input type="password" id="input-detail-password" class="board-input" placeholder="비밀번호 4자리" style="max-width: 180px;">
+            <input type="password" id="input-detail-password" class="board-input" placeholder="비밀번호(영문/숫자 4~8자리)" minlength="4" maxlength="8" pattern="[a-zA-Z0-9]{4,8}" title="최소 4자리에서 최대 8자리의 영문 및 숫자만 입력 가능합니다." style="max-width: 200px;">
             <button id="btn-detail-unlock" class="btn-primary-action">비밀글 열기</button>
           </div>
         </div>
@@ -370,27 +455,32 @@
           <table class="standard-form-table">
             <tbody>
               <tr>
-                <th>분야 선택<span class="req-star">*</span></th>
+                <th>카테고리 선택<span class="req-star">*</span></th>
                 <td>
                   <select id="edit-category" class="board-select" style="min-width: 180px;" required>
-                    <option value="시설/환경">시설/환경</option>
-                    <option value="서비스">서비스 불만</option>
-                    <option value="건의사항">건의사항</option>
-                    <option value="기타">기타</option>
+                    <option value="1. 시설/환경">1. 시설/환경</option>
+                    <option value="2. 건의사항">2. 건의사항</option>
+                    <option value="3. 서비스 불만">3. 서비스 불만</option>
+                    <option value="4. 기타">4. 기타</option>
                   </select>
                 </td>
               </tr>
-              <tr>
+              <tr id="row-edit-anon-toggle">
                 <th>익명 / 비밀 설정<span class="req-star">*</span></th>
                 <td>
                   <div class="checkbox-toggle-card">
-                    <label class="check-row">
+                    <label class="check-row" id="label-edit-is-anonymous">
                       <input type="checkbox" id="edit-is-anonymous">
                       <div>
                         <span class="check-title">익명으로 변경하기</span>
                         <span class="check-desc">(작성자 이름이 '익명'으로 표기됩니다)</span>
                       </div>
                     </label>
+
+                    <!-- 비회원일 때 표시되는 익명 고정 안내 -->
+                    <div id="badge-edit-nonmember-fixed-anon" style="display: none; background-color: #f1f5f9; border: 1px dashed #cbd5e1; border-radius: 4px; padding: 0.6rem 0.85rem; color: #334155; font-size: 0.85rem; line-height: 1.4;">
+                      🔒 <strong>비회원 익명 고정</strong>: 비회원 상태에서는 작성자 정보가 '익명'으로 유지됩니다.
+                    </div>
 
                     <label class="check-row">
                       <input type="checkbox" id="edit-is-secret">
@@ -402,18 +492,18 @@
                   </div>
                 </td>
               </tr>
-              <tr>
+              <tr id="row-edit-author">
                 <th>작성자 이름<span class="req-star">*</span></th>
                 <td>
-                  <input type="text" id="edit-author" class="board-input" style="max-width: 240px;" required>
+                  <input type="text" id="edit-author" class="board-input" style="max-width: 240px;">
                 </td>
               </tr>
-              <tr>
+              <tr id="row-edit-password">
                 <th>새 비밀번호</th>
                 <td>
-                  <input type="password" id="edit-password" class="board-input" placeholder="비밀번호 변경 시에만 입력" minlength="4" style="max-width: 240px;">
+                  <input type="password" id="edit-password" class="board-input" placeholder="변경 시 영문/숫자 4~8자리" minlength="4" maxlength="8" pattern="[a-zA-Z0-9]{4,8}" title="최소 4자리에서 최대 8자리의 영문 및 숫자만 입력 가능합니다." style="max-width: 240px;">
                   <span style="font-size: 0.82rem; color: #6b7280; margin-left: 0.5rem;">
-                    (비워두면 기존 비밀번호가 유지됩니다)
+                    (비워두면 기존 유지 / 최소 4자리~최대 8자리 영문 및 숫자만 가능)
                   </span>
                 </td>
               </tr>
@@ -461,9 +551,7 @@
             <label for="login-pw" style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 0.35rem;">관리자 비밀번호</label>
             <!-- 빈공란으로 초기화 -->
             <input type="password" id="login-pw" class="board-input" placeholder="관리자 비밀번호를 입력하세요" style="width: 100%;" required autocomplete="current-password">
-            <div style="font-size: 0.8rem; color: #6b7280; margin-top: 0.35rem;">
-              ※ 데모 관리자 계정: <strong>admin</strong> / 비밀번호: <strong>admin1234</strong>
-            </div>
+
           </div>
 
           <button type="submit" class="btn-primary-action" style="width: 100%; justify-content: center; padding: 0.75rem;">
@@ -476,6 +564,146 @@
             </a>
           </div>
         </form>
+      </div>
+    </section>
+
+    <!-- ====================================================
+         [페이지 7] 회원 로그인 / 회원가입 뷰 (#/user/login)
+         ==================================================== -->
+    <section id="view-user-login" class="page-view">
+      <div class="user-auth-container">
+        <!-- 좌측: 로그인 -->
+        <div class="auth-panel auth-panel-left">
+          <div style="text-align: center; font-size: 2rem; margin-bottom: 0.35rem;">🔑</div>
+          <h2 class="login-card-title">로그인</h2>
+          <p class="login-card-desc">등록된 회원 아이디로 로그인하세요.</p>
+
+          <form id="form-user-login">
+            <div style="margin-bottom: 1.15rem;">
+              <label for="user-login-id" style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 0.35rem;">아이디</label>
+              <input type="text" id="user-login-id" class="board-input" placeholder="아이디를 입력하세요" style="width: 100%;" required autocomplete="username">
+            </div>
+
+            <div style="margin-bottom: 1.25rem;">
+              <label for="user-login-pw" style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 0.35rem;">비밀번호</label>
+              <input type="password" id="user-login-pw" class="board-input" placeholder="비밀번호를 입력하세요" style="width: 100%;" required autocomplete="current-password">
+            </div>
+
+            <button type="submit" class="btn-primary-action" style="width: 100%; justify-content: center; padding: 0.75rem;">
+              로그인
+            </button>
+          </form>
+        </div>
+
+        <!-- 중앙 구분선 -->
+        <div class="auth-panel-divider"></div>
+
+        <!-- 우측: 회원가입 -->
+        <div class="auth-panel auth-panel-right">
+          <div style="text-align: center; font-size: 2rem; margin-bottom: 0.35rem;">📝</div>
+          <h2 class="login-card-title">회원가입</h2>
+          <p class="login-card-desc">새 계정을 만들어 민원을 작성하세요.</p>
+
+          <form id="form-user-register">
+            <div style="margin-bottom: 1.15rem;">
+              <label for="register-id" style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 0.35rem;">아이디</label>
+              <input type="text" id="register-id" class="board-input" placeholder="사용할 아이디 입력" style="width: 100%;" required autocomplete="username" minlength="2" maxlength="20">
+            </div>
+
+            <div style="margin-bottom: 1.15rem;">
+              <label for="register-pw" style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 0.35rem;">비밀번호</label>
+              <input type="password" id="register-pw" class="board-input" placeholder="영문/숫자 4~8자리" style="width: 100%;" required autocomplete="new-password" minlength="4" maxlength="8">
+              <div style="font-size: 0.78rem; color: #6b7280; margin-top: 0.3rem;">
+                ※ 4~8자리 영문(대소문자) 및 숫자만 가능
+              </div>
+            </div>
+
+            <div style="margin-bottom: 1.25rem;">
+              <label for="register-nickname" style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 0.35rem;">닉네임</label>
+              <input type="text" id="register-nickname" class="board-input" placeholder="글 작성 시 표시될 닉네임" style="width: 100%;" required minlength="1" maxlength="20">
+            </div>
+
+            <button type="submit" class="btn-primary-action" style="width: 100%; justify-content: center; padding: 0.75rem; background-color: #059669; border-color: #047857;">
+              회원가입
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- 하단 링크 -->
+      <div style="margin-top: 1.25rem; display: flex; justify-content: center; gap: 2rem; font-size: 0.85rem;">
+        <a href="#/list" style="color: #6b7280; text-decoration: underline;">← 민원 목록으로</a>
+        <a href="#/new" style="color: #0266b3; font-weight: 600;">비회원(익명)으로 글쓰기 →</a>
+      </div>
+    </section>
+
+    <!-- ====================================================
+         [페이지 8] 회원 메뉴 및 정보 설정 뷰 (#/user/menu)
+         ==================================================== -->
+    <section id="view-user-menu" class="page-view">
+      <div class="user-auth-container user-menu-container">
+        <!-- 좌측: 세로 탭 메뉴칸들 (맨 아래 로그아웃) -->
+        <div class="auth-panel auth-panel-left user-menu-nav-panel">
+          <div class="user-profile-summary">
+            <div class="user-avatar-icon">👤</div>
+            <h2 class="user-profile-id" id="page-user-id">아이디</h2>
+            <span class="user-profile-badge">정회원 계정</span>
+          </div>
+
+          <!-- 세로 탭 메뉴 목록 -->
+          <div class="user-vertical-menu">
+            <a href="#/new" class="user-nav-btn">
+              <span>✏️</span> 새 민원 작성하기
+            </a>
+            <button type="button" id="btn-menu-my-posts" class="user-nav-btn">
+              <span>📋</span> 내 작성 민원 모아보기
+            </button>
+            <a href="#/list" class="user-nav-btn">
+              <span>🏛️</span> 전체 민원 목록으로
+            </a>
+          </div>
+
+          <!-- 맨 아래 로그아웃 -->
+          <div class="user-nav-bottom">
+            <button type="button" id="btn-menu-logout" class="user-logout-btn">
+              <span>🚪</span> 로그아웃
+            </button>
+          </div>
+        </div>
+
+        <!-- 중앙 구분선 -->
+        <div class="auth-panel-divider"></div>
+
+        <!-- 우측: 닉네임 설정 영역 (화면 옆에서 직접 작성) -->
+        <div class="auth-panel auth-panel-right user-nickname-panel">
+          <div style="text-align: center; font-size: 2rem; margin-bottom: 0.35rem;">⚙️</div>
+          <h2 class="login-card-title">닉네임 설정</h2>
+          <p class="login-card-desc">민원 작성 시 표시될 작성자 닉네임을 설정하고 변경할 수 있습니다.</p>
+
+          <form id="form-update-nickname">
+            <div class="nickname-current-box">
+              <span style="font-size: 0.85rem; color: #64748b; font-weight: 600;">현재 적용된 닉네임:</span>
+              <div class="nickname-current-value" id="page-user-current-nick">-</div>
+            </div>
+
+            <div style="margin-bottom: 1.25rem;">
+              <label for="menu-new-nickname" style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 0.35rem;">새 닉네임 입력</label>
+              <input type="text" id="menu-new-nickname" class="board-input" placeholder="변경할 새 닉네임을 입력하세요" style="width: 100%;" required minlength="1" maxlength="20">
+              <div style="font-size: 0.78rem; color: #6b7280; margin-top: 0.35rem;">
+                ※ 공백 없이 1~20자리 닉네임을 입력해 주세요.
+              </div>
+            </div>
+
+            <button type="submit" class="btn-primary-action" style="width: 100%; justify-content: center; padding: 0.75rem;">
+              닉네임 변경 저장
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- 하단 링크 -->
+      <div style="margin-top: 1.25rem; display: flex; justify-content: center; gap: 2rem; font-size: 0.85rem;">
+        <a href="#/list" style="color: #6b7280; text-decoration: underline;">← 민원 목록으로 돌아가기</a>
       </div>
     </section>
 
